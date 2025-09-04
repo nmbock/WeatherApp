@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Application Météo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center min-h-screen p-4 bg-gray-100">
+
+    <div class="w-full max-w-md p-8 bg-white rounded-xl shadow-lg transform transition-all duration-300 hover:scale-105">
+        <h1 class="text-3xl font-bold text-center text-gray-800 mb-6">Météo de la Ville</h1>
+        
+        <form id="weather-form" class="flex flex-col gap-4">
+            <input type="text" id="city-input" placeholder="Entrez le nom d'une ville" required 
+                   class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">
+            <button type="submit" 
+                    class="w-full px-4 py-2 text-white font-semibold bg-blue-600 rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors">
+                Obtenir la météo
+            </button>
+        </form>
+
+        <div id="weather-result" class="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50 hidden">
+            <div id="city-name" class="text-xl font-bold text-gray-700 mb-2"></div>
+            <div id="temperature" class="text-4xl font-extrabold text-blue-600 mb-2"></div>
+            <div id="description" class="text-lg text-gray-600"></div>
+            <div id="wind-speed" class="text-sm text-gray-500 mt-2"></div>
+        </div>
+
+        <div id="message" class="mt-4 text-center text-red-500 font-medium hidden"></div>
+
+    </div>
+
+    <script>
+        // Mappage des codes météo de l'OMM à des descriptions
+        const weatherCodeMap = {
+            0: "Ciel dégagé",
+            1: "Principalement dégagé",
+            2: "Partiellement nuageux",
+            3: "Ciel couvert",
+            45: "Brouillard",
+            48: "Brouillard de givre",
+            51: "Bruine légère",
+            53: "Bruine modérée",
+            55: "Bruine dense",
+            56: "Bruine verglaçante légère",
+            57: "Bruine verglaçante dense",
+            61: "Pluie légère",
+            63: "Pluie modérée",
+            65: "Pluie forte",
+            66: "Pluie verglaçante légère",
+            67: "Pluie verglaçante forte",
+            71: "Chute de neige légère",
+            73: "Chute de neige modérée",
+            75: "Chute de neige forte",
+            77: "Grains de neige",
+            80: "Averses de pluie légères",
+            81: "Averses de pluie modérées",
+            82: "Averses de pluie fortes",
+            85: "Averses de neige légères",
+            86: "Averses de neige fortes",
+            95: "Orage",
+            96: "Orage avec grêle légère",
+            99: "Orage avec grêle forte"
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('weather-form');
+            const cityInput = document.getElementById('city-input');
+            const weatherResult = document.getElementById('weather-result');
+            const messageDiv = document.getElementById('message');
+            const cityNameDiv = document.getElementById('city-name');
+            const temperatureDiv = document.getElementById('temperature');
+            const descriptionDiv = document.getElementById('description');
+            const windSpeedDiv = document.getElementById('wind-speed');
+
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const city = cityInput.value.trim();
+                
+                if (!city) {
+                    showMessage('Veuillez entrer un nom de ville.');
+                    return;
+                }
+
+                showLoading(true);
+                weatherResult.classList.add('hidden');
+                showMessage('');
+
+                try {
+                    const response = await fetch(`/api/weather?city=${encodeURIComponent(city)}`);
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        displayWeather(data);
+                    } else {
+                        showMessage(data.error || 'Ville non trouvée. Veuillez réessayer.');
+                    }
+                } catch (error) {
+                    showMessage('Erreur de connexion. Veuillez vérifier votre connexion.');
+                } finally {
+                    showLoading(false);
+                }
+            });
+
+            function displayWeather(data) {
+                cityNameDiv.textContent = data.name;
+                temperatureDiv.innerHTML = `${Math.round(data.temperature)}°C`;
+                descriptionDiv.textContent = weatherCodeMap[data.weathercode] || "Conditions non disponibles";
+                windSpeedDiv.textContent = `Vitesse du vent: ${Math.round(data.windspeed * 3.6)} km/h`;
+                weatherResult.classList.remove('hidden');
+            }
+
+            function showMessage(msg) {
+                messageDiv.textContent = msg;
+                if (msg) {
+                    messageDiv.classList.remove('hidden');
+                } else {
+                    messageDiv.classList.add('hidden');
+                }
+            }
+
+            function showLoading(isLoading) {
+                form.querySelector('button').disabled = isLoading;
+                form.querySelector('button').textContent = isLoading ? 'Chargement...' : 'Obtenir la météo';
+            }
+        });
+    </script>
+</body>
+</html>

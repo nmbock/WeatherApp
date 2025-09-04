@@ -1,0 +1,19 @@
+{
+    "name": "meteo-app",
+    "version": "1.0.0",
+    "description": "Une application web simple pour obtenir la météo d'une ville via l'API Open-Meteo.",
+    "main": "server.js",
+    "scripts": {
+    "start": "node server.js"
+    },
+    "keywords": [
+    "nodejs",
+    "meteo",
+    "open-meteo"
+    ],
+    "author": "Votre nom ici",
+    "license": "ISC",
+    "dependencies": {
+    "express": "^4.18.2"
+    }
+    }
